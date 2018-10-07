@@ -3,6 +3,7 @@ import pandas as pd
 import scipy as sp
 from sklearn.model_selection import train_test_split
 import time
+import matplotlib.pyplot as plt
 
 #Values
 datasetSize = 100000
@@ -23,6 +24,7 @@ def MAE(AdfTest, U, S, VS):
             error += abs(a[2] - US[int(a[0]-1),:].dot(VS[:,int(a[1]-1)]))
             count += 1
     print(str(len(US)) + ": " + str(error/count))
+    return error/count
 
 def Speedtest(AdfTest, U, S, VS):
     ATest = AdfTest.values
@@ -36,7 +38,7 @@ def Speedtest(AdfTest, U, S, VS):
 def trainSpeed(Adf,x,b):
     startTime = time.time()
     #Arbitrary random seed 3
-    AdfTrain, AdfTest = train_test_split(Adf,train_size=x, test_size=1-x, random_state=3)
+    AdfTrain, AdfTest = train_test_split(Adf,train_size=x, test_size=1-x, random_state=6)
 
     AdfTrain = AdfTrain.pivot(index=0,columns=1)
     AdfTrain = AdfTrain.fillna(AdfTrain.mean())
@@ -65,12 +67,13 @@ def trainSpeed(Adf,x,b):
     duration = endTime-startTime
     totalPredictions = datasetSize * (1-x)
     print("speed when x: " + str(x) + " and basis: " + str(b) + " prediction/s: " + str(totalPredictions/duration))
-
+    return totalPredictions/duration
 
 def train(Adf, x):
+    results = []
     print("results when x is " + str(x))
     #Arbitrary random seed 3
-    AdfTrain, AdfTest = train_test_split(Adf,train_size=x, test_size=1-x, random_state=3)
+    AdfTrain, AdfTest = train_test_split(Adf,train_size=x, test_size=1-x, random_state=6)
 
     AdfTrain = AdfTrain.pivot(index=0,columns=1)
     AdfTrain = AdfTrain.fillna(AdfTrain.mean())
@@ -89,22 +92,33 @@ def train(Adf, x):
     VS = np.matmul(Ssqrt,Vk)
 
     count = 0
-    MAE(AdfTest, Uk, Ssqrt, VS)
+    results.append(MAE(AdfTest, Uk, Ssqrt, VS))
     for Ai in AIncrements:
         UAdd = Vk.dot(Ai).dot(np.linalg.inv(Sk))
         Uk = np.vstack((Uk , UAdd))
         count+=1
         if (count == addRatings):
-            MAE(AdfTest, Uk, Ssqrt, VS)
+            results.append(MAE(AdfTest, Uk, Ssqrt, VS))
             count = 0
-    MAE(AdfTest, Uk, Ssqrt, VS)
+    results.append(MAE(AdfTest, Uk, Ssqrt, VS))
+    return results
 
 a = np.loadtxt('./ml-100k/u.data', usecols=[0,1,2]).tolist()
 Adf = pd.DataFrame(a)
+XbM = []
 for xi in x:
-    train(Adf, xi)
-
+    XbM.append(train(Adf, xi))
+d = [600,650,700,750,800,850,900,943]
+print("Red:x=0.8\nGreen:x=0.5\nBlue:x=0.2\n")
+plt.plot(d,XbM[0],'r-',d,XbM[1],'g-',d,XbM[2],'b-')
+plt.show()
 #does not print. Only gets the value
+speedResult = []
 for xi in x:
+    xResult = []
     for b in basisSpeed:
-        trainSpeed(Adf,xi,b)
+        xResult.append(trainSpeed(Adf,xi,b))
+    speedResult.append(xResult)
+    print("Red:x=0.8\nGreen:x=0.5\nBlue:x=0.2\n")
+plt.plot(d, speedResult[0],'r-',d, speedResult[1],'g-',d, speedResult[2],'b-')
+plt.show()
