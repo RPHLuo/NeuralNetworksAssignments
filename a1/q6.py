@@ -1,35 +1,65 @@
 import numpy as np
+import random
 from mnist import MNIST
 
-A = [[1,2,3],
-     [4,5,6],
-     [7,8,9]]
+mndata = MNIST('C:\Users\colin.daniel\Documents\School\FALL 2018\COMP 4107') # Change this to the directory where you're storing the test and training data
 
-B = [[1,1,1],
-     [2,2,2],
-     [3,3,3]]
+images, labels = mndata.load_training()
+testImgs, testLbls = mndata.load_testing()
 
-i = [[3,6,2],
-     [9,8,2],
-     [5,2,1]]
+# Generates the image data for all digits (0 - 9)
+def generateImages(rank):
+    imageList = list()
+    for i in range(10):
+        imageList.append(getImageData(i, rank))
 
-def digitCalc (unknown, digitData):
-    concat = digitData
-    z = np.matrix(unknown).flatten()
-    bases = 0    
+    return imageList
 
-    for digit in digitData:   
-        digit = np.matrix(digit).flatten().T
 
-        if bases == 0 :
-            concat = digit
-            bases += 1
-            continue
+# Given a digit and a number of training images to sample from (basis)
+# This function builds a m x n matrix - where m is the rank of the image vector
+# and n is the number of images used to form the basis
+def getImageData(digit, basis):
+    index = 0
+    nSet = []
+    count = 0 # Used to track how many images we've added
+
+    while count < basis:
+        # Gets random samples from the image dataset
+        index = random.randrange(0, len(testImgs))
+        image = images[index]
         
-        concat = np.hstack((concat, digit))
-        bases += 1
+        if labels[index] == digit:
+            if count == 0:
+                nSet = np.transpose(image)
+            else:
+                # Concatenates any subsequent image column vectors onto the matrix
+                nSet = np.column_stack((nSet, np.transpose(image)))
 
-    u,s,vT = np.linalg.svd(concat)
+            count += 1
+
+        index += 1
+    return nSet
+
+
+# Compares the residuals returned over all 10 digits and chooses the lowest one
+# Returns 1 if correct and 0 if incorrect
+def guess(testIndex):
+    values = list()
+    for img in sigImgs:
+        values.append(calculateResidual(testImgs[testIndex], img))
+
+    #print("Image was: " + str(testLbls[testIndex]))
+    #print("We guessed: " + str(values.index(min(values))))
+
+    if testLbls[testIndex] == values.index(min(values)) :
+        return 1
+    else :
+        return 0
+
+# Calculates the residual between the given image data of a digit and our unknown digit data
+def calculateResidual (unknownDigit, digitData):
+    u,s,vT = np.linalg.svd(digitData)
 
     rank = np.linalg.matrix_rank(u)
     
@@ -37,17 +67,16 @@ def digitCalc (unknown, digitData):
 
     X = np.subtract(I, np.matmul(u,u.T))
 
-    return np.linalg.norm(np.matmul(X,z.T))
+    return np.linalg.norm(np.matmul(X, np.transpose(unknownDigit)), 2)
 
-database = list()
-database.append([A,B,A,A,B])
-database.append([B,B,A,B])
 
-values = list()
+print("Program Start")
+sigImgs = generateImages(10)
+correct = 0
 
-for digitData in database:
-    values.append(digitCalc(i, digitData))
-    print(digitCalc(i, digitData))
+for i in range(10):
+    index = random.randrange(0, len(testImgs))
+    correct += guess(index)
 
-print(min(values))
-#print(digitCalc(i,(A,B,A,A,B,B,A)))
+print("Number Correct: " + str(correct))
+print("Program End")
