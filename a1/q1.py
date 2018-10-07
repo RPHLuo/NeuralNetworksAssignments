@@ -1,5 +1,7 @@
 import numpy as np
 
+#note u is the users and v is the movies
+
 a = np.matrix([
 [3,1,2,3],
 [4,3,4,3],
@@ -14,14 +16,21 @@ s = np.diagflat(s)
 alice4D = alice*u*s
 print(alice4D)
 
+
 u, s, v = np.linalg.svd(a)
-u = np.delete(u,[2,3],1)
+u = u[:, [0,1]]
 s = np.delete(s,[2,3])
 s = np.diagflat(s)
-v = np.transpose(v)
-v = np.delete(v,[2,3],1)
-#print(u)
-#print(s)
-#print(v)
+v = v[[0,1]]
 alice2D = alice*u*np.linalg.inv(s)
 print(alice2D)
+
+print(u)
+print(s)
+print(v)
+
+print(u[3])
+print(v[:,0])
+
+prediction = np.average(alice) + (u[3] * s * v[:,0])
+print("prediction: " + str(prediction[0,0]))
