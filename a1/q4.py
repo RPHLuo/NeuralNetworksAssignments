@@ -5,7 +5,7 @@ oldW = list(w) # This will be compared to the new weight vector every iteration
 
 A = [[1, 2, 3],
      [2, 3, 4],
-     [3, 4, 5],
+     [4, 5, 6],
      [1, 1, 1]]
 
 target = 1 # The target vector (Represented as a value since every vector component is the same)
