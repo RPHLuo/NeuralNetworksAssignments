@@ -7,8 +7,8 @@ a = [
 [1,1,1]
 ]
 
-u,d,v = np.linalg.svd(a)
+u,s,v = np.linalg.svd(a)
 
-print(u)
-print(d)
-print(v)
+print("U:\n" + str(u))
+print("S:\n" + str(s))
+print("V:\n" + str(v))

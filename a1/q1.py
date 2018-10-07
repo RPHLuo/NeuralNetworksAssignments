@@ -14,7 +14,7 @@ u, s, v = np.linalg.svd(a)
 v = np.transpose(v)
 s = np.diagflat(s)
 alice4D = alice*u*s
-print(alice4D)
+print("Alice4D: " + str(alice4D))
 
 
 u, s, v = np.linalg.svd(a)
@@ -23,14 +23,7 @@ s = np.delete(s,[2,3])
 s = np.diagflat(s)
 v = v[[0,1]]
 alice2D = alice*u*np.linalg.inv(s)
-print(alice2D)
-
-print(u)
-print(s)
-print(v)
-
-print(u[3])
-print(v[:,0])
+print("Alice2D: " + str(alice2D))
 
 prediction = np.average(alice) + (u[3] * s * v[:,0])
 print("prediction: " + str(prediction[0,0]))
