@@ -12,6 +12,7 @@ sk = np.diagflat(s[0:2]) #take the first 2 significant values and convert them t
 
 #A2 is the product of the 3 components above
 A2 = np.matmul((np.matmul(uk, sk)), vtk)
+print("Rank 2 Matrix: " + str(A2))
 
 #Prints the difference between our original matrix and its rank-2 approximation (A2)
-print(np.linalg.norm(np.subtract(A, A2)))
+print("Norm: " + str(np.linalg.norm(np.subtract(A, A2))))
