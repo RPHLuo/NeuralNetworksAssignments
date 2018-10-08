@@ -77,7 +77,7 @@ def runTest(basisNum):
 
     print("---------------------------")
     print("Number of Basis Images: " + str(basisNum))
-    print("Percentage Correct: " + str(correct)+"0")
+    print("Percentage Correct: " + str(correct * 10)
 
 
 runTest(100)
