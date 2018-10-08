@@ -1,5 +1,6 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 from mnist import MNIST
 
 mndata = MNIST('$$$') # Set this to the directory path where you're storing the test and training data
@@ -75,14 +76,30 @@ def runTest(basisNum):
         index = random.randrange(0, len(testImgs))
         correct += guess(index, sigImgs)
 
-    print("---------------------------")
-    print("Number of Basis Images: " + str(basisNum))
-    print("Percentage Correct: " + str(correct * 10)
+    basisNumbers.append(basisNum)
+    percentCorrect.append(correct * 10)
 
 
+
+
+
+basisNumbers = list()
+percentCorrect = list()
+
+print("MAKE SURE YOU DOWNLOAD THE MNIST DATA AND POINT TO ITS LOCATION (SEE LINE 6)")
 runTest(100)
+print("Test 1 Complete")
 runTest(250)
+print("Test 2 Complete")
 runTest(500)
+print("Test 3 Complete")
 runTest(750)
+print("Test 4 Complete")
 runTest(1000)
+print("Test 5 Complete")
+print("All Tests Complete")
 
+plt.plot(basisNumbers, percentCorrect)
+plt.xlabel('Number of Basis Images Used')
+plt.ylabel('Classification Percentage')
+plt.show()
