@@ -2,7 +2,7 @@ import numpy as np
 import random
 from mnist import MNIST
 
-mndata = MNIST($$$) # Set this to the directory path where you're storing the test and training data
+mndata = MNIST('$$$') # Set this to the directory path where you're storing the test and training data
 
 images, labels = mndata.load_training()
 testImgs, testLbls = mndata.load_testing()
@@ -49,9 +49,6 @@ def guess(testIndex, sigImgs):
     for img in sigImgs:
         values.append(calculateResidual(testImgs[testIndex], img))
 
-    #print("Image was: " + str(testLbls[testIndex]))
-    #print("We guessed: " + str(values.index(min(values))))
-
     if testLbls[testIndex] == values.index(min(values)) :
         return 1
     else :
@@ -60,15 +57,16 @@ def guess(testIndex, sigImgs):
 # Calculates the residual between the given image data of a digit and our unknown digit data
 def calculateResidual (unknownDigit, digitData):    
     u,s,vT = np.linalg.svd(digitData)
-
-    rank = np.linalg.matrix_rank(u)
     
-    I = np.identity(rank)
+    rank = np.linalg.matrix_rank(u)
+    A = np.subtract(np.identity(rank), np.matmul(u, u.T))
+    AT = np.transpose(A)
+    z = unknownDigit
 
-    X = np.subtract(I, np.matmul(u,u.T))
+    change = np.matmul(AT, np.matmul(A, z))
+    return np.linalg.norm(change, 2)
 
-    return np.linalg.norm(np.matmul(X, np.transpose(unknownDigit)), 2)
-
+# Runs tests for a specified number of basis images
 def runTest(basisNum):
     sigImgs = generateImages(basisNum)
     correct = 0
@@ -79,12 +77,12 @@ def runTest(basisNum):
 
     print("---------------------------")
     print("Number of Basis Images: " + str(basisNum))
-    print("Percentage Correct: " + str(correct/10))
+    print("Percentage Correct: " + str(correct)+"0")
 
 
-runTest(2)
-runTest(5)
-runTest(10)
-runTest(15)
-runTest(25)
+runTest(100)
+runTest(250)
+runTest(500)
+runTest(750)
+runTest(1000)
 
