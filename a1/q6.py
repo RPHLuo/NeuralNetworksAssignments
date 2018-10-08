@@ -2,7 +2,7 @@ import numpy as np
 import random
 from mnist import MNIST
 
-mndata = MNIST('C:\Users\colin.daniel\Documents\School\FALL 2018\COMP 4107') # Change this to the directory where you're storing the test and training data
+mndata = MNIST($$$) # Set this to the directory path where you're storing the test and training data
 
 images, labels = mndata.load_training()
 testImgs, testLbls = mndata.load_testing()
@@ -44,7 +44,7 @@ def getImageData(digit, basis):
 
 # Compares the residuals returned over all 10 digits and chooses the lowest one
 # Returns 1 if correct and 0 if incorrect
-def guess(testIndex):
+def guess(testIndex, sigImgs):
     values = list()
     for img in sigImgs:
         values.append(calculateResidual(testImgs[testIndex], img))
@@ -58,7 +58,7 @@ def guess(testIndex):
         return 0
 
 # Calculates the residual between the given image data of a digit and our unknown digit data
-def calculateResidual (unknownDigit, digitData):
+def calculateResidual (unknownDigit, digitData):    
     u,s,vT = np.linalg.svd(digitData)
 
     rank = np.linalg.matrix_rank(u)
@@ -69,14 +69,22 @@ def calculateResidual (unknownDigit, digitData):
 
     return np.linalg.norm(np.matmul(X, np.transpose(unknownDigit)), 2)
 
+def runTest(basisNum):
+    sigImgs = generateImages(basisNum)
+    correct = 0
 
-print("Program Start")
-sigImgs = generateImages(10)
-correct = 0
+    for i in range(10):
+        index = random.randrange(0, len(testImgs))
+        correct += guess(index, sigImgs)
 
-for i in range(10):
-    index = random.randrange(0, len(testImgs))
-    correct += guess(index)
+    print("---------------------------")
+    print("Number of Basis Images: " + str(basisNum))
+    print("Percentage Correct: " + str(correct/10))
 
-print("Number Correct: " + str(correct))
-print("Program End")
+
+runTest(2)
+runTest(5)
+runTest(10)
+runTest(15)
+runTest(25)
+
