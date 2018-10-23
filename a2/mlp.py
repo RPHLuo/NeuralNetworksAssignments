@@ -16,6 +16,15 @@ def model(X, w_h1, w_h2, w_o):
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 trX, trY, teX, teY = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
 
+print(trX)
+print(trX.shape)
+print(trY)
+print(trY.shape)
+print(teX)
+print(teX.shape)
+print(teY)
+print(teY.shape)
+
 size_h1 = tf.constant(625, dtype=tf.int32)
 size_h2 = tf.constant(300, dtype=tf.int32)
 
