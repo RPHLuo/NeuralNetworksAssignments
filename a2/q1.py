@@ -18,12 +18,15 @@ def answer(x,y):
 
 #training: 10, testing: 9
 def data(n):
+    uniformRange = []
+    if n == 10:
+        uniformRange = np.arange(-0.9,1,0.2)
+    else:
+        uniformRange = np.arange(-0.8,1,0.2)
     data = []
-    for i in range(1,n+1):
-        for j in range(1,n+1):
-            x = i*0.2 - 1.1
-            y = j*0.2 - 1.1
-            data.append([x,y])
+    for i in range(0,n):
+        for j in range(0,n):
+            data.append([uniformRange[i],uniformRange[j]])
     return data
 
 X = tf.placeholder("float", [None, 2])
@@ -41,18 +44,20 @@ train_op = tf.train.GradientDescentOptimizer(0.05).minimize(cost) # construct an
 predict_op = tf.argmax(py_x, 1)
 
 trX = data(10)
-trY = np.array([map(lambda x: answer(x[0], x[1]), trX)])
+trY = np.transpose(np.matrix(list(map(lambda x: answer(x[0], x[1]), trX))))
+trX = np.matrix(trX)
 teX = data(9)
-teY = np.array([map(lambda x: answer(x[0], x[1]), teX)])
+teY = np.transpose(np.matrix(list(map(lambda x: answer(x[0], x[1]), teX))))
+teX = np.matrix(teX)
+
+print(teY)
 
 # Launch the graph in a session
 with tf.Session() as sess:
     # you need to initialize all variables
     tf.global_variables_initializer().run()
-    print(range(0,len(trX),128))
+    print(range(0,len(trX)))
     for i in range(3):
-        for start, end in zip(range(0, len(trX), 128), range(128, len(trX)+1, 128)):
+        for start, end in zip(range(0, len(trX)), range(1, len(trX)+1)):
             sess.run(train_op, feed_dict={X: trX[start:end], Y: trY[start:end]})
-        print(i, np.mean(np.argmax(teY, axis=1) ==
-                         sess.run(predict_op, feed_dict={X: teX})))
-    saver.save(sess,"q1/session.ckpt")
+        print(i, np.mean(np.argmax(teY, axis=1) == sess.run(predict_op, feed_dict={X: teX})))
