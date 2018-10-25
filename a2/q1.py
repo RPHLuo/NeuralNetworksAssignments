@@ -36,12 +36,11 @@ size_h1 = tf.constant(8, dtype=tf.int32)
 
 w_h1 = init_weights([2, size_h1])
 w_o = init_weights([size_h1, 1])
-
 py_x = model(X, w_h1, w_o)
 
-cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y)) # compute costs
+cost = tf.reduce_mean(py_x - Y) # compute costs
 train_op = tf.train.GradientDescentOptimizer(0.05).minimize(cost) # construct an optimizer
-predict_op = tf.argmax(py_x, 1)
+predict_op = py_x
 
 trX = data(10)
 trY = np.transpose(np.matrix(list(map(lambda x: answer(x[0], x[1]), trX))))
@@ -50,14 +49,10 @@ teX = data(9)
 teY = np.transpose(np.matrix(list(map(lambda x: answer(x[0], x[1]), teX))))
 teX = np.matrix(teX)
 
-print(teY)
-
 # Launch the graph in a session
 with tf.Session() as sess:
     # you need to initialize all variables
     tf.global_variables_initializer().run()
-    print(range(0,len(trX)))
     for i in range(3):
-        for start, end in zip(range(0, len(trX)), range(1, len(trX)+1)):
-            sess.run(train_op, feed_dict={X: trX[start:end], Y: trY[start:end]})
-        print(i, np.mean(np.argmax(teY, axis=1) == sess.run(predict_op, feed_dict={X: teX})))
+        sess.run(train_op, feed_dict={X: trX[0:100], Y: trY[0:100]})
+        print(i, np.mean(teY == sess.run(predict_op, feed_dict={X: teX})))
