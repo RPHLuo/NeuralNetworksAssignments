@@ -38,7 +38,7 @@ w_h1 = init_weights([2, size_h1])
 w_o = init_weights([size_h1, 1])
 py_x = model(X, w_h1, w_o)
 
-cost = tf.reduce_mean(py_x - Y) # compute costs
+cost = tf.reduce_mean(abs(py_x - Y)) # compute costs
 train_op = tf.train.GradientDescentOptimizer(0.05).minimize(cost) # construct an optimizer
 predict_op = py_x
 
@@ -55,4 +55,4 @@ with tf.Session() as sess:
     tf.global_variables_initializer().run()
     for i in range(3):
         sess.run(train_op, feed_dict={X: trX[0:100], Y: trY[0:100]})
-        print(i, np.mean(teY == sess.run(predict_op, feed_dict={X: teX})))
+        print(i, np.mean(abs(teY - sess.run(predict_op, feed_dict={X: teX}))))
