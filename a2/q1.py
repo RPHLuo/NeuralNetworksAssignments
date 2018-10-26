@@ -2,9 +2,6 @@ import numpy as np
 import tensorflow as tf
 import math
 
-#f(x,y) = cos(x + 6*0.35y) + 2*0.35xy
-#x,y e [-1,1]
-
 
 def init_weights(shape):
     return tf.Variable(tf.random_normal(shape, stddev=0.01))
@@ -38,8 +35,11 @@ w_h1 = init_weights([2, size_h1])
 w_o = init_weights([size_h1, 1])
 py_x = model(X, w_h1, w_o)
 
-cost = tf.reduce_mean(abs(py_x - Y)) # compute costs
-train_op = tf.train.GradientDescentOptimizer(0.05).minimize(cost) # construct an optimizer
+learningRate = 0.02
+cost = tf.sqrt(tf.losses.mean_squared_error(py_x, Y)) # compute costs
+#train_op = tf.train.GradientDescentOptimizer(learningRate).minimize(cost)
+train_op = tf.train.MomentumOptimizer(learningRate,0.9).minimize(cost)
+#train_op = tf.train.RMSPropOptimizer(learning_rate=learningRate).minimize(cost)
 predict_op = py_x
 
 trX = data(10)
@@ -53,6 +53,7 @@ teX = np.matrix(teX)
 with tf.Session() as sess:
     # you need to initialize all variables
     tf.global_variables_initializer().run()
-    for i in range(3):
+    for i in range(10):
         sess.run(train_op, feed_dict={X: trX[0:100], Y: trY[0:100]})
-        print(i, np.mean(abs(teY - sess.run(predict_op, feed_dict={X: teX}))))
+        print("training: ", i, sess.run(tf.losses.mean_squared_error(labels=trY, predictions=sess.run(predict_op, feed_dict={X: trX}))))
+        print(i, sess.run(tf.losses.mean_squared_error(teY, sess.run(predict_op, feed_dict={X: teX}))))
