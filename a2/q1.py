@@ -1,6 +1,7 @@
 import numpy as np
 import tensorflow as tf
 import math
+import matplotlib.pyplot as plt
 
 
 def init_weights(shape):
@@ -26,19 +27,21 @@ def data(n):
             data.append([uniformRange[i],uniformRange[j]])
     return data
 
+hiddenLayerSize = 8
+
 X = tf.placeholder("float", [None, 2])
 Y = tf.placeholder("float", [None, 1])
 
-size_h1 = tf.constant(8, dtype=tf.int32)
+size_h1 = tf.constant(hiddenLayerSize, dtype=tf.int32)
 
 w_h1 = init_weights([2, size_h1])
 w_o = init_weights([size_h1, 1])
 py_x = model(X, w_h1, w_o)
 
 learningRate = 0.02
-cost = tf.sqrt(tf.losses.mean_squared_error(py_x, Y)) # compute costs
-#train_op = tf.train.GradientDescentOptimizer(learningRate).minimize(cost)
-train_op = tf.train.MomentumOptimizer(learningRate,0.9).minimize(cost)
+cost = tf.sqrt(tf.losses.mean_squared_error(py_x, Y))
+train_op = tf.train.GradientDescentOptimizer(learningRate).minimize(cost)
+#train_op = tf.train.MomentumOptimizer(learningRate,0.9).minimize(cost)
 #train_op = tf.train.RMSPropOptimizer(learning_rate=learningRate).minimize(cost)
 predict_op = py_x
 
