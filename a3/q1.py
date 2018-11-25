@@ -1,4 +1,3 @@
-import sklearn as sk
 import numpy as np
 import random
 from tensorflow.examples.tutorials.mnist import input_data
@@ -12,19 +11,33 @@ class Hopfield_Network:
         if type == 'hebbian':
             self.hebbian_update(input)
         elif type=='storkey':
-            self.storkey_learning(input)
+            self.storkey_update(input)
         return
 
     def hebbian_update(self, input):
         self.weights += np.outer(input, input) / self.total
         np.fill_diagonal(self.weights, 0)
 
-    def storkey_learning(self, input):
+    def storkey_update(self, input):
+#This is taken from the github
+        self.weights += np.outer(input, input) / self.total
         net = np.dot(self.weights, input)
         pre = np.outer(input, net)
         post = np.outer(net, input)
         self.weights -= np.add(pre, post) / self.total
-        return
+        np.fill_diagonal(self.weights, 0)
+
+#This is my own
+
+#        hebbian = np.outer(input, input) / self.total
+#        np.fill_diagonal(hebbian, 0)
+#        net = np.dot(self.weights, input)
+#        pre = np.outer(input, net)
+#        post = pre.T
+#        self.weights += hebbian / self.total
+#        self.hebbian_update(input)
+#        self.weights -= np.add(pre, post) / self.total
+#        np.fill_diagonal(self.weights, 0)
 
     def activate(self, input):
         converged = False
@@ -50,15 +63,22 @@ class Hopfield_Network:
                 count = 0
         return input
 
-def compare_result(result, data, i):
-    lowest_error = len(result)
+def compare_result(result, ones, fives, i):
+    lowest_ones_error = np.inf
+    lowest_fives_error = np.inf
     for index in range(0,i):
-        error = 0.
-        for r in range(0,len(result)):
-            error += abs(data[index][r] - result[r])
-        if lowest_error > error:
-            lowest_error = error
-    return lowest_error / len(result)
+        ones_error = np.linalg.norm(ones[index]-result)
+        fives_error = np.linalg.norm(fives[index]-result)
+        if lowest_ones_error > ones_error:
+            lowest_ones_error = ones_error
+        if lowest_fives_error > fives_error:
+            lowest_fives_error = fives_error
+    if (lowest_ones_error > lowest_fives_error):
+        return 5
+    elif (lowest_fives_error > lowest_ones_error):
+        return 1
+    else:
+        return 0
 
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 trX, trY, teX, teY = mnist.train.images, mnist.train.labels, mnist.test.images, mnist.test.labels
@@ -87,11 +107,13 @@ def hopfield_test(training_type='hebbian'):
             hopfield.update(fives_input[i], training_type)
         for o in order:
             result = hopfield.activate(t_input_ones_fives[o])
-            resultSet = fives_input
+            answer = 5
             if t_output_ones_fives[o][0] == 1:
-                resultSet = ones_input
-            culmulative_accuracy += compare_result(result, resultSet, n)
-        accuracy = 1 - (culmulative_accuracy / len(t_input_ones_fives))
+                answer = 1
+            guess = compare_result(result, ones_input, fives_input, n)
+            if guess == answer:
+                culmulative_accuracy += 1
+        accuracy = culmulative_accuracy / len(order)
         print(training_type,': inputs: ', n, ' accuracy: ', accuracy)
 
 hopfield_test('storkey')
