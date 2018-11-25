@@ -38,10 +38,10 @@ class FeedForwardNetwork(object):
 
         self.py_x = self.model(self.X, self.w_h1, self.w_h2, self.w_o)
 
-        self.learningRate = 0.02
+        self.learning_rate = 0.02
         self.tolerance = 0.02
         self.cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=self.py_x, labels=self.Y))
-        self.train_op = tf.train.GradientDescentOptimizer(0.05).minimize(self.cost)
+        self.train_op = tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
         self.predict_op = tf.argmax(self.py_x, 1)
 
 def input_data(raw_data=True):
@@ -75,7 +75,7 @@ X_pca,labels_pca = input_data(raw_data=False)
 X_raw,labels_raw = input_data(raw_data=True)
 X_train_raw, X_test_raw, y_train_raw, y_test_raw = train_test_split(X_raw, labels_raw, test_size=0.25, random_state=42)
 X_train_pca, X_test_pca, y_train_pca, y_test_pca = train_test_split(X_pca, labels_pca, test_size=0.25, random_state=42)
-opt_data_nn = FeedForwardNetwork(150, 100, 50, 7)
+opt_data_nn = FeedForwardNetwork(150, 200, 50, 7)
 opt_data_nn.train(X_train_pca, y_train_pca, X_test_pca, y_test_pca)
-raw_data_nn = FeedForwardNetwork(1850, 600, 200, 7)
+raw_data_nn = FeedForwardNetwork(1850, 200, 50, 7)
 raw_data_nn.train(X_train_raw, y_train_raw, X_test_raw, y_test_raw)
