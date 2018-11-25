@@ -11,8 +11,8 @@ class FeedForwardNetwork:
         return tf.Variable(tf.random_normal(shape, stddev=1))
 
     def model(self, X, w_h1, w_o):
-        h1 = tf.nn.sigmoid(tf.matmul(X, w_h1))
-        return tf.matmul(h1, w_o)
+        h1 = tf.nn.leaky_relu(tf.matmul(self.X, self.w_h1))
+        return tf.matmul(self.h1, self.w_o)
 
     def train(trX, trY):
         with tf.Session() as sess:
@@ -27,8 +27,10 @@ class FeedForwardNetwork:
         self.Y = tf.placeholder("float", [None, 1])
 
         self.size_h1 = tf.constant(size, dtype=tf.int32)
+        self.size_h1 = tf.constant(size, dtype=tf.int32)
 
         self.w_h1 = self.init_weights([2, self.size_h1])
+        self.w_h2 = self.init_weights([2, self.size_h1])
         self.w_o = self.init_weights([self.size_h1, 1])
         self.py_x = model(self.X, self.w_h1, self.w_o)
 
