@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 
-class FeedForwardNetwork:
+class FeedForwardNetwork(object):
 
     def init_weights(self, shape):
         return tf.Variable(tf.random_normal(shape, stddev=1))
@@ -75,7 +75,7 @@ X_pca,labels_pca = input_data(raw_data=False)
 X_raw,labels_raw = input_data(raw_data=True)
 X_train_raw, X_test_raw, y_train_raw, y_test_raw = train_test_split(X_raw, labels_raw, test_size=0.25, random_state=42)
 X_train_pca, X_test_pca, y_train_pca, y_test_pca = train_test_split(X_pca, labels_pca, test_size=0.25, random_state=42)
-raw_data_nn = FeedForwardNetwork(1850, 600, 200, 7)
 opt_data_nn = FeedForwardNetwork(150, 100, 50, 7)
 opt_data_nn.train(X_train_pca, y_train_pca, X_test_pca, y_test_pca)
+raw_data_nn = FeedForwardNetwork(1850, 600, 200, 7)
 raw_data_nn.train(X_train_raw, y_train_raw, X_test_raw, y_test_raw)
