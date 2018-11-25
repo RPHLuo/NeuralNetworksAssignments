@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import tensorflow as tf
 import numpy as np
 
-class FeedForwardNetwork:
+class FeedForwardNetwork(object):
 
     def init_weights(self, shape):
         return tf.Variable(tf.random_normal(shape, stddev=1))
