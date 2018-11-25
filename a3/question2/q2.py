@@ -10,7 +10,7 @@ from tensorflow.python.framework import ops
 from tensorflow.python.ops import clip_ops
 import matplotlib.pyplot as plt
 from sklearn.datasets import load_digits
-from sklearn.cross_validation import train_test_split
+from sklearn.model_selection import train_test_split
 
 
 # In[2]:
@@ -40,7 +40,7 @@ num_classes = 10            # Number of target classes, 10 for MNIST
 var_rbf = 225               # What variance do you expect workable for the RBF?
 
 #Obtain and proclaim sizes
-N,D = X_train.shape         
+N,D = X_train.shape
 Ntest = X_test.shape[0]
 print('We have %s observations with %s dimensions'%(N,D))
 
@@ -64,17 +64,17 @@ with tf.name_scope("Hidden_layer") as scope:
   #Centroids and var are the main trainable parameters of the first layer
     centroids = tf.Variable(tf.random_uniform([num_centr,D],dtype=tf.float32),name='centroids')
     var = tf.Variable(tf.truncated_normal([num_centr],mean=var_rbf,stddev=5,dtype=tf.float32),name='RBF_variance')
-  
+
   #For now, we collect the distances
     exp_list = []
     for i in range(num_centr):
         exp_list.append(tf.exp((-1*tf.reduce_sum(tf.square(tf.subtract(x,centroids[i,:])),1))/(2*var[i])))
         phi = tf.transpose(tf.stack(exp_list))
-        
+
 with tf.name_scope("Output_layer") as scope:
     w = tf.Variable(tf.truncated_normal([num_centr,num_classes], stddev=0.1, dtype=tf.float32),name='weight')
     bias = tf.Variable( tf.constant(0.1, shape=[num_classes]),name='bias')
-        
+
     h = tf.matmul(phi,w)+bias
     size2 = tf.shape(h)
 
@@ -109,7 +109,7 @@ with tf.name_scope("Evaluating") as scope:
     correct_prediction = tf.equal(tf.argmax(h,1), y_)
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
     accuracy_summary = tf.summary.scalar("accuracy", accuracy)
-    
+
 merged = tf.summary.merge_all()
 
 
@@ -127,7 +127,7 @@ with tf.Session() as sess:
 
         step = 0
         sess.run(tf.initialize_all_variables())
-  
+
     for i in range(max_iterations):
         batch_ind = np.random.choice(N,batch_size,replace=False)
         if i%100 == 1:
@@ -135,18 +135,18 @@ with tf.Session() as sess:
             result = sess.run([cost,accuracy,train_step],feed_dict={x:X_train[batch_ind], y_: y_train[batch_ind]})
             perf_collect[0,step] = result[0]
             perf_collect[2,step] = result[1]
-            
+
             #Measure test performance
             test_ind = np.random.choice(Ntest,test_size,replace=False)
             result = sess.run([cost,accuracy,merged], feed_dict={ x: X_test[test_ind], y_: y_test[test_ind]})
             perf_collect[1,step] = result[0]
             perf_collect[3,step] = result[1]
-      
+
             #Write information for Tensorboard
             summary_str = result[2]
             writer.add_summary(summary_str, i)
             writer.flush()  #Don't forget this command! It makes sure Python writes the summaries to the log-file
-        
+
             #Print intermediate numbers to terminal
             acc = result[1]
             print("Estimated accuracy at iteration %s of %s: %s" % (i,max_iterations, acc))
@@ -162,17 +162,19 @@ with tf.Session() as sess:
 plt.figure()
 plt.plot(perf_collect[2],label = 'Train accuracy')
 plt.plot(perf_collect[3],label = 'Test accuracy')
+plt.title('RBF- Train vs Test Accuracy')
 plt.legend()
 plt.show()
 
 plt.figure()
 plt.plot(perf_collect[0],label = 'Train cost')
 plt.plot(perf_collect[1],label = 'Test cost')
+plt.title('RBF- Train vs Test Cost')
 plt.legend()
 plt.show()
 
 
-# ### Changing the number of teh hidden later
+# ### Changing the number of the hidden layer
 
 # In[10]:
 
@@ -187,17 +189,17 @@ with tf.name_scope("Hidden_layer") as scope:
   #Centroids and var are the main trainable parameters of the first layer
     centroids = tf.Variable(tf.random_uniform([num_centr,D],dtype=tf.float32),name='centroids')
     var = tf.Variable(tf.truncated_normal([num_centr],mean=var_rbf,stddev=5,dtype=tf.float32),name='RBF_variance')
-  
+
   #For now, we collect the distances
     exp_list = []
     for i in range(num_centr):
         exp_list.append(tf.exp((-1*tf.reduce_sum(tf.square(tf.subtract(x,centroids[i,:])),1))/(2*var[i])))
         phi = tf.transpose(tf.stack(exp_list))
-        
+
 with tf.name_scope("Output_layer") as scope:
     w = tf.Variable(tf.truncated_normal([num_centr,num_classes], stddev=0.1, dtype=tf.float32),name='weight')
     bias = tf.Variable( tf.constant(0.1, shape=[num_classes]),name='bias')
-    
+
     h = tf.matmul(phi,w)+bias
     size2 = tf.shape(h)
 
@@ -233,7 +235,7 @@ with tf.name_scope("Evaluating") as scope:
     correct_prediction = tf.equal(tf.argmax(h,1), y_)
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
     accuracy_summary = tf.summary.scalar("accuracy", accuracy)
-    
+
 merged = tf.summary.merge_all()
 
 
@@ -254,13 +256,13 @@ with tf.Session() as sess:
 
         step = 0
         sess.run(tf.initialize_all_variables())
-    
+
 #    #Debugging
 #    batch_ind = np.random.choice(N,batch_size,replace=False)
 #    result = sess.run([phi],feed_dict={x:X_train[batch_ind], y_: y_train[batch_ind]})
 #    print(result[0])
-    
-    
+
+
     for i in range(max_iterations):
         batch_ind = np.random.choice(N,batch_size,replace=False)
         if i%100 == 1:
@@ -268,18 +270,18 @@ with tf.Session() as sess:
             result = sess.run([cost,accuracy,train_step],feed_dict={x:X_train[batch_ind], y_: y_train[batch_ind]})
             perf_collect[0,step] = result[0]
             perf_collect[2,step] = result[1]
-            
+
             #Measure test performance
             test_ind = np.random.choice(Ntest,test_size,replace=False)
             result = sess.run([cost,accuracy,merged], feed_dict={ x: X_test[test_ind], y_: y_test[test_ind]})
             perf_collect[1,step] = result[0]
             perf_collect[3,step] = result[1]
-      
+
             #Write information for Tensorboard
             summary_str = result[2]
             writer.add_summary(summary_str, i)
             writer.flush()  #Don't forget this command! It makes sure Python writes the summaries to the log-file
-            
+
             #Print intermediate numbers to terminal
             acc = result[1]
             print("Estimated accuracy at iteration %s of %s: %s" % (i,max_iterations, acc))
@@ -295,12 +297,14 @@ with tf.Session() as sess:
 plt.figure()
 plt.plot(perf_collect[2],label = 'Train accuracy')
 plt.plot(perf_collect[3],label = 'Test accuracy')
+plt.title('Different Hidden Layer #- Train vs Test Accuracy')
 plt.legend()
 plt.show()
 
 plt.figure()
 plt.plot(perf_collect[0],label = 'Train cost')
 plt.plot(perf_collect[1],label = 'Test cost')
+plt.title('Different Hidden Layer #- Train vs Test Cost')
 plt.legend()
 plt.show()
 
@@ -314,21 +318,21 @@ with tf.name_scope("Hidden_layer") as scope:
   #Centroids and var are the main trainable parameters of the first layer
     centroids = tf.Variable(tf.random_uniform([num_centr,D],dtype=tf.float32),name='centroids')
     var = tf.Variable(tf.truncated_normal([num_centr],mean=var_rbf,stddev=5,dtype=tf.float32),name='RBF_variance')
-  
+
   #For now, we collect the distances
     exp_list = []
     for i in range(num_centr):
         exp_list.append(tf.exp((-1*tf.reduce_sum(tf.square(tf.subtract(x,centroids[i,:])),1))/(2*var[i])))
         phi = tf.transpose(tf.stack(exp_list))
-        
+
 with tf.name_scope("Output_layer") as scope:
     w = tf.Variable(tf.truncated_normal([num_centr,num_classes], stddev=0.1, dtype=tf.float32),name='weight')
     bias = tf.Variable( tf.constant(0.1, shape=[num_classes]),name='bias')
-    
+
     h = tf.matmul(phi,w)+bias
     #Adding dropout
-    h = tf.nn.dropout(h, 0.5) 
-    
+    h = tf.nn.dropout(h, 0.5)
+
     size2 = tf.shape(h)
 
 with tf.name_scope("Softmax") as scope:
@@ -363,7 +367,7 @@ with tf.name_scope("Evaluating") as scope:
     correct_prediction = tf.equal(tf.argmax(h,1), y_)
     accuracy = tf.reduce_mean(tf.cast(correct_prediction, "float"))
     accuracy_summary = tf.summary.scalar("accuracy", accuracy)
-    
+
 merged = tf.summary.merge_all()
 
 perf_collect = np.zeros((4,int(np.floor(max_iterations /100))))
@@ -380,7 +384,7 @@ with tf.Session() as sess:
 
         step = 0
         sess.run(tf.initialize_all_variables())
-   
+
     for i in range(max_iterations):
         batch_ind = np.random.choice(N,batch_size,replace=False)
         if i%100 == 1:
@@ -388,18 +392,18 @@ with tf.Session() as sess:
             result = sess.run([cost,accuracy,train_step],feed_dict={x:X_train[batch_ind], y_: y_train[batch_ind]})
             perf_collect[0,step] = result[0]
             perf_collect[2,step] = result[1]
-            
+
             #Measure test performance
             test_ind = np.random.choice(Ntest,test_size,replace=False)
             result = sess.run([cost,accuracy,merged], feed_dict={ x: X_test[test_ind], y_: y_test[test_ind]})
             perf_collect[1,step] = result[0]
             perf_collect[3,step] = result[1]
-      
+
             #Write information for Tensorboard
             summary_str = result[2]
             writer.add_summary(summary_str, i)
             writer.flush()  #Don't forget this command! It makes sure Python writes the summaries to the log-file
-        
+
             #Print intermediate numbers to terminal
             acc = result[1]
             print("Estimated accuracy at iteration %s of %s: %s" % (i,max_iterations, acc))
@@ -416,11 +420,12 @@ plt.figure()
 plt.plot(perf_collect[2],label = 'Train accuracy')
 plt.plot(perf_collect[3],label = 'Test accuracy')
 plt.legend()
+plt.title('Dropout- Train vs Test Accuracy')
 plt.show()
 
 plt.figure()
 plt.plot(perf_collect[0],label = 'Train cost')
 plt.plot(perf_collect[1],label = 'Test cost')
 plt.legend()
+plt.title('Dropout- Train vs Test Cost')
 plt.show()
-
