@@ -14,40 +14,29 @@ class FeedForwardNetwork:
         h1 = tf.nn.sigmoid(tf.matmul(X, w_h1))
         return tf.matmul(h1, w_o)
 
-    def cost():
-        return
-
-    def train():
-        return
+    def train(trX, trY):
+        with tf.Session() as sess:
+            tf.global_variables_initializer().run()
+            for i in range(1000):
+                for start, end in zip(range(0, 90, 10), range(10, 100, 10)):
+                    sess.run(self.train_op, feed_dict={X: trX[start:end], Y: trY[start:end]})
+            print(i, sess.run(tf.losses.mean_squared_error(self.teY, sess.run(self.predict_op, feed_dict={X: self.teX}))))
 
     def __init__(self, shape):
-        self.init_weights(shape)
-        return
+        X = tf.placeholder("float", [None, 2])
+        Y = tf.placeholder("float", [None, 1])
 
-def runNeuralNetwork(data, size):
-    X = tf.placeholder("float", [None, 2])
-    Y = tf.placeholder("float", [None, 1])
+        size_h1 = tf.constant(size, dtype=tf.int32)
 
-    size_h1 = tf.constant(size, dtype=tf.int32)
+        w_h1 = init_weights([2, size_h1])
+        w_o = init_weights([size_h1, 1])
+        py_x = model(X, w_h1, w_o)
 
-    w_h1 = init_weights([2, size_h1])
-    w_o = init_weights([size_h1, 1])
-    py_x = model(X, w_h1, w_o)
-
-    learningRate = 0.02
-    tolerance = 0.02
-    cost = tf.losses.mean_squared_error(py_x, Y)
-    traingdm = tf.train.MomentumOptimizer(learningRate,0.9).minimize(cost)
-    predict_op = py_x
-
-    # Launch the graph in a session
-    with tf.Session() as sess:
-        # you need to initialize all variables
-        tf.global_variables_initializer().run()
-        for i in range(epochs):
-            for start, end in zip(range(0, 90, 10), range(10, 100, 10)):
-                sess.run(traingdm, feed_dict={X: trX[start:end], Y: trY[start:end]})
-        print(i, sess.run(tf.losses.mean_squared_error(teY, sess.run(predict_op, feed_dict={X: teX}))))
+        learningRate = 0.02
+        tolerance = 0.02
+        cost = tf.losses.mean_squared_error(py_x, Y)
+        traingdm = tf.train.MomentumOptimizer(learningRate,0.9).minimize(cost)
+        predict_op = py_x
 
 lfw_people = fetch_lfw_people(min_faces_per_person=70, resize=0.4)
 X = lfw_people.data
