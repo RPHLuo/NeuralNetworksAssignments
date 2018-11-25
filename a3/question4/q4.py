@@ -6,7 +6,6 @@ import tensorflow as tf
 import numpy as np
 
 class FeedForwardNetwork(object):
-
     def init_weights(self, shape):
         return tf.Variable(tf.random_normal(shape, stddev=1))
 
@@ -19,8 +18,10 @@ class FeedForwardNetwork(object):
         with tf.Session() as sess:
             tf.global_variables_initializer().run()
             for i in range(10):
-                for start, end in zip(range(0, len(trX), 100), range(100, len(trX)+1, 100)):
+                for start, end in zip(range(0, len(trX), 10), range(10, len(trX)+1, 10)):
                     sess.run(self.train_op, feed_dict={self.X: trX[start:end], self.Y: trY[start:end]})
+                remainder = len(trX) % 10
+                sess.run(self.train_op, feed_dict={self.X: trX[(len(trX)-remainder):], self.Y: trY[(len(trX)-remainder):]})
                 print(sess.run(self.predict_op, feed_dict={self.X: teX}))
                 print(np.argmax(teY, axis=1))
                 print(i, np.mean(np.argmax(teY, axis=1) == sess.run(self.predict_op, feed_dict={self.X: teX})))
