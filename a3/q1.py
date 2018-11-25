@@ -19,25 +19,12 @@ class Hopfield_Network:
         np.fill_diagonal(self.weights, 0)
 
     def storkey_update(self, input):
-#This is taken from the github
         self.weights += np.outer(input, input) / self.total
         net = np.dot(self.weights, input)
         pre = np.outer(input, net)
-        post = np.outer(net, input)
+        post = pre.T
         self.weights -= np.add(pre, post) / self.total
         np.fill_diagonal(self.weights, 0)
-
-#This is my own
-
-#        hebbian = np.outer(input, input) / self.total
-#        np.fill_diagonal(hebbian, 0)
-#        net = np.dot(self.weights, input)
-#        pre = np.outer(input, net)
-#        post = pre.T
-#        self.weights += hebbian / self.total
-#        self.hebbian_update(input)
-#        self.weights -= np.add(pre, post) / self.total
-#        np.fill_diagonal(self.weights, 0)
 
     def activate(self, input):
         converged = False
@@ -96,11 +83,11 @@ t_input_ones_fives = [teX[i] for i in range(0,len(teX)) if t_ones[i] != 0 or t_f
 
 def hopfield_test(training_type='hebbian'):
     training_inputs = [1,2,3,5,8,10]
+    random.shuffle(ones_input)
+    random.shuffle(fives_input)
     for n in training_inputs:
         hopfield = Hopfield_Network(784, n*2)
         culmulative_accuracy = 0.
-        random.shuffle(ones_input)
-        random.shuffle(fives_input)
         order = list(range(0,len(t_input_ones_fives)))
         for i in range(0,n):
             hopfield.update(ones_input[i], training_type)

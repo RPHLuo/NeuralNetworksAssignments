@@ -50,4 +50,22 @@ def runNeuralNetwork(data, size):
                 sess.run(optimizers[optimizerIndex], feed_dict={X: trX[start:end], Y: trY[start:end]})
         print(i, sess.run(tf.losses.mean_squared_error(teY, sess.run(predict_op, feed_dict={X: teX}))))
 
+lfw_people = fetch_lfw_people(min_faces_per_person=70, resize=0.4)
+X = lfw_people.data
+n_features = X.shape[1]
+y = lfw_people.target
+target_names = lfw_people.target_names
+n_classes = target_names.shape[0]
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.25, random_state=42)
+n_components = 150
+
+print("Extracting the top %d eigenfaces from %d faces" % (n_components, X_train.shape[0]))
+pca = PCA(n_components=n_components, svd_solver='randomized', whiten=True).fit(X_train)
+
+eigenfaces = pca.components_.reshape((n_components, h, w))
+
+print("Projecting the input data on the eigenfaces orthonormal basis")
+X_train_pca = pca.transform(X_train)
+X_test_pca = pca.transform(X_test)
+
 runFeedforeward()
