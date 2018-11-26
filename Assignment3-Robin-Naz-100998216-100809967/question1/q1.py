@@ -1,8 +1,9 @@
 import numpy as np
 import random
+import matplotlib.pyplot as plt
 from tensorflow.examples.tutorials.mnist import input_data
 
-class Hopfield_Network:
+class Hopfield_Network(object):
     def __init__(self, num_units, total=0, scope='hopfield_network'):
         self.weights = np.zeros([num_units, num_units])
         self.total = total
@@ -28,7 +29,6 @@ class Hopfield_Network:
 
     def activate(self, input):
         converged = False
-        count = 0
         while not converged:
             Oldinput = input
             indexes = list(range(0,len(input)))
@@ -42,12 +42,8 @@ class Hopfield_Network:
                         input[i] = 1
                     else:
                         input[i] = 0
-            if np.array_equal(Oldinput, input):
-                count += 1
-                if count == 3:
-                    converged = True
-            else:
-                count = 0
+            if np.allclose(Oldinput, input):
+                converged = True
         return input
 
 def compare_result(result, ones, fives, i):
@@ -83,6 +79,7 @@ t_input_ones_fives = [teX[i] for i in range(0,len(teX)) if t_ones[i] != 0 or t_f
 
 def hopfield_test(training_type='hebbian'):
     training_inputs = [1,2,3,5,8,10,20]
+    results = []
     for n in training_inputs:
         hopfield = Hopfield_Network(784, n*2)
         culmulative_accuracy = 0.
@@ -99,10 +96,18 @@ def hopfield_test(training_type='hebbian'):
             if guess == answer:
                 culmulative_accuracy += 1
         accuracy = culmulative_accuracy / len(order)
+        results.append(accuracy)
         print(training_type,': inputs: ', n*2, ' accuracy: ', accuracy)
+    return results
 
 
 random.shuffle(ones_input)
 random.shuffle(fives_input)
-hopfield_test()
-hopfield_test('storkey')
+
+heb_results = hopfield_test('hebbian')
+storkey_results = hopfield_test('storkey')
+training_inputs = [1,2,3,5,8,10,20]
+plt.title('hebbian vs storkey')
+plt.plot(training_inputs,heb_results)
+plt.plot(training_inputs,storkey_results)
+plt.show()
