@@ -82,7 +82,7 @@ t_output_ones_fives = [t_output_ones_fives[i] for i in range(0,len(t_output_ones
 t_input_ones_fives = [teX[i] for i in range(0,len(teX)) if t_ones[i] != 0 or t_fives[i] != 0]
 
 def hopfield_test(training_type='hebbian'):
-    training_inputs = [1,2,3,5,8,10]
+    training_inputs = [1,2,3,5,8,10,20]
     for n in training_inputs:
         hopfield = Hopfield_Network(784, n*2)
         culmulative_accuracy = 0.
@@ -99,7 +99,7 @@ def hopfield_test(training_type='hebbian'):
             if guess == answer:
                 culmulative_accuracy += 1
         accuracy = culmulative_accuracy / len(order)
-        print(training_type,': inputs: ', n, ' accuracy: ', accuracy)
+        print(training_type,': inputs: ', n*2, ' accuracy: ', accuracy)
 
 
 random.shuffle(ones_input)
