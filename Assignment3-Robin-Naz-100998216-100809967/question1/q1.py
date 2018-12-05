@@ -2,6 +2,11 @@ import numpy as np
 import random
 import matplotlib.pyplot as plt
 from tensorflow.examples.tutorials.mnist import input_data
+training_inputs = [2,4,6,10,16,20,40]
+plt.title('hebbian vs storkey')
+plt.plot(training_inputs,[0.571287617168229,0.6526887025160335,0.6635421805624075,0.6921558954119388,0.6877158362111495,0.7671435619141589,0.4410458806117415])
+plt.plot(training_inputs,[0.571287617168229,0.6526887025160335,0.6635421805624075,0.7005426739023187,0.7242229896398619,0.5599407992106561,0.5801677355698076])
+plt.show()
 
 class Hopfield_Network(object):
     def __init__(self, num_units, total=0, scope='hopfield_network'):
