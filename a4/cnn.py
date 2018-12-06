@@ -2,6 +2,7 @@ import tensorflow as tf
 import numpy as np
 from tensorflow.examples.tutorials.mnist import input_data
 import pickle
+import os
 
 def unpickle(file):
     with open(file, 'rb') as fo:
@@ -12,36 +13,8 @@ total_batches = 5
 batch_size = 128
 test_size = 256
 
-def init_weights(shape):
-    return tf.Variable(tf.random_normal(shape, stddev=0.01))
-
-def model(X, w, w2, w_fc, w_o, p_keep_conv, p_keep_hidden):
-    l1a = tf.nn.relu(tf.nn.conv2d(X, w,                       # l1a shape=(?, 28, 28, 32)
-                        strides=[1, 1, 1, 1], padding='SAME'))
-    l1 = tf.nn.max_pool(l1a, ksize=[1, 3, 3, 1],              # l1 shape=(?, 14, 14, 32)
-                        strides=[1, 2, 2, 1], padding='SAME')
-    l1 = tf.nn.dropout(l1, p_keep_conv)
-
-    l1 = tf.nn.lrn(l1, 4)
-
-    l2a = tf.nn.relu(tf.nn.conv2d(l1, w2,                       # l1a shape=(?, 28, 28, 32)
-                        strides=[1, 1, 1, 1], padding='SAME'))
-    l2 = tf.nn.max_pool(l2a, ksize=[1, 3, 3, 1],              # l1 shape=(?, 14, 14, 32)
-                        strides=[1, 2, 2, 1], padding='SAME')
-    l2 = tf.nn.dropout(l2, p_keep_conv)
-
-#    conv2 = tf.nn.conv2d(conv1_bn, conv2_filter, strides=[1,1,1,1], padding='SAME')
-#    conv2 = tf.nn.relu(conv2)
-#    conv2_pool = tf.nn.max_pool(conv2, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')
-#    conv2_bn = tf.layers.batch_normalization(conv2_pool)
-
-    l3 = tf.reshape(l2, [-1, w_fc.get_shape().as_list()[0]])    # reshape to (?, 14x14x32)
-
-    l4 = tf.nn.relu(tf.matmul(l3, w_fc))
-    l4 = tf.nn.dropout(l4, p_keep_hidden)
-
-    pyx = tf.matmul(l4, w_o)
-    return pyx
+def init_weights(shape, num):
+    return tf.Variable(tf.random_normal(shape, stddev=0.01, name='random'), name='weight'+num)
 
 def getData(batch_number=1):
     file = './cifar-10-batches-py/data_batch_{0}'.format(batch_number)
@@ -67,27 +40,65 @@ def getTestData():
         reshaped_y[i][labels[i]] = 1.
     return reshaped_x, reshaped_y
 
+def model(X, w, w2, w_fc, w_o, p_keep_conv, p_keep_hidden):
+    with tf.variable_scope('layer1') as scope:
+        l1a = tf.nn.relu(tf.nn.conv2d(X, w,                       # l1a shape=(?, 28, 28, 32)
+                            strides=[1, 1, 1, 1], padding='SAME'), name='l1a')
+        l1 = tf.nn.max_pool(l1a, ksize=[1, 2, 2, 1],              # l1 shape=(?, 14, 14, 32)
+                            strides=[1, 2, 2, 1], padding='SAME', name='pool')
+        l1 = tf.nn.dropout(l1, p_keep_conv, name='dropout')
+#    l1 = tf.nn.lrn(l1, name='l1norm')
+
+    with tf.variable_scope('layer2') as scope:
+        l2a = tf.nn.relu(tf.nn.conv2d(l1, w2,                       # l1a shape=(?, 28, 28, 32)
+                            strides=[1, 1, 1, 1], padding='SAME'), name='l2a')
+        l2 = tf.nn.max_pool(l2a, ksize=[1, 2, 2, 1],              # l1 shape=(?, 14, 14, 32)
+                            strides=[1, 2, 2, 1], padding='SAME', name='pool')
+        l2 = tf.nn.dropout(l2, p_keep_conv, name='dropout')
+#    l2 = tf.nn.lrn(l2, name='l2norm')
+
+#    l3a = tf.nn.relu(tf.nn.conv2d(l2, w3,                       # l1a shape=(?, 28, 28, 32)
+#                        strides=[1, 1, 1, 1], padding='SAME'), name='l3a')
+#    l3 = tf.nn.max_pool(l2a, ksize=[1, 8, 8, 1],              # l1 shape=(?, 14, 14, 32)
+#                        strides=[1, 2, 2, 1], padding='SAME', name='l3pool')
+#    l3 = tf.nn.dropout(l2, p_keep_conv, name='l3dropout')
+
+    with tf.variable_scope('layerfc') as scope:
+        l4 = tf.reshape(l2, [-1, w_fc.get_shape().as_list()[0]], name='l4')    # reshape to (?, 14x14x32)
+
+        l_fc = tf.nn.relu(tf.matmul(l4, w_fc), name='l_fully_connected')
+        l_fc = tf.nn.dropout(l_fc, p_keep_hidden, name='dropout')
+
+    pyx = tf.matmul(l_fc, w_o, name='pyx')
+    return pyx
+
 with tf.name_scope('cnn') as scope:
-    X = tf.placeholder("float", [None, 32, 32, 3], name='input')
-    Y = tf.placeholder("float", [None, 10], name='output')
+    X = tf.placeholder('float', [None, 32, 32, 3], name='input')
+    Y = tf.placeholder('float', [None, 10], name='output')
 
-    w = init_weights([5, 5, 3, 64])       # 3x3x1 conv, 32 outputs
-    w2 = init_weights([5, 5, 64, 64])       # 3x3x1 conv, 32 outputs
-    w_fc = init_weights([64 * 8 * 8, 625]) # FC 32 * 14 * 14 inputs, 625 outputs
-    w_o = init_weights([625, 10])         # FC 625 inputs, 10 outputs (labels)
+    w = init_weights([3, 3, 3, 32], '1')       # 3x3x1 conv, 32 outputs
+    w2 = init_weights([3, 3, 32, 64], '2')       # 3x3x1 conv, 32 outputs
+#    w3 = init_weights([5, 5, 64, 64])       # 3x3x1 conv, 32 outputs
+    w_fc = init_weights([64 * 8 * 8, 1300], 'fc') # FC 32 * 14 * 14 inputs, 625 outputs
+    w_o = init_weights([1300, 10], 'output')         # FC 625 inputs, 10 outputs (labels)
 
-    p_keep_conv = tf.placeholder("float", name='keep_conv')
-    p_keep_hidden = tf.placeholder("float", name='keep_hidden')
+    p_keep_conv = tf.placeholder('float', name='keep_chance')
+    p_keep_hidden = tf.placeholder('float', name='keep_chance')
     py_x = model(X, w, w2, w_fc, w_o, p_keep_conv, p_keep_hidden)
 
-    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y))
-    train_op = tf.train.RMSPropOptimizer(0.001, 0.9).minimize(cost)
-    predict_op = tf.argmax(py_x, 1)
+    cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=py_x, labels=Y), name='cost')
+    train_op = tf.train.RMSPropOptimizer(0.001, 0.9, name='optimizer').minimize(cost)
+    predict_op = tf.argmax(py_x, 1, name='predict_op')
 
     te_x, te_y = getTestData()
 
     # Launch the graph in a session
     with tf.Session() as sess:
+
+        saver = tf.train.Saver()
+        if os.path.exists('mlp/session.ckpt'):
+            saver.restore(sess, 'mlp/session.ckpt')
+
         writer = tf.summary.FileWriter('./graphs', sess.graph)
         tf.global_variables_initializer().run()
         reshaped_x,reshaped_y = [],[]
@@ -96,7 +107,7 @@ with tf.name_scope('cnn') as scope:
                 reshaped_x, reshaped_y = getData(b)
                 training_batch = zip(range(0, len(reshaped_x), batch_size), range(batch_size, len(reshaped_x)+1, batch_size))
                 for start, end in training_batch:
-                    sess.run(train_op, feed_dict={X: reshaped_x[start:end], Y: reshaped_y[start:end], p_keep_conv: 0.8, p_keep_hidden: 0.5})
+                    sess.run(train_op, feed_dict={X: reshaped_x[start:end], Y: reshaped_y[start:end], p_keep_conv: 0.8, p_keep_hidden: 0.8})
 
             test_indices = np.arange(len(te_x)) # Get A Test Batch
             np.random.shuffle(test_indices)
@@ -109,3 +120,4 @@ with tf.name_scope('cnn') as scope:
                     p_keep_conv: 1.0,
                     p_keep_hidden: 1.0
                 })))
+            saver.save(sess, 'mlp/session.ckpt')
