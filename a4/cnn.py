@@ -3,6 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import os
+import sys
 
 def unpickle(file):
     with open(file, 'rb') as fo:
@@ -49,7 +50,6 @@ def model(X, w, w2, w_fc, w_o, p_keep_conv, p_keep_hidden):
         l1_bias = tf.Variable(tf.constant(0.05, shape=[32]), name="bias")
         l1 = tf.nn.bias_add(l1, l1_bias)
         l1 = tf.nn.dropout(l1, p_keep_conv, name='dropout')
-#    l1 = tf.nn.lrn(l1, name='l1norm')
 
     with tf.variable_scope('layer2') as scope:
         l2a = tf.nn.relu(tf.nn.conv2d(l1, w2,                       # l1a shape=(?, 28, 28, 32)
@@ -80,11 +80,10 @@ with tf.name_scope('cnn') as scope:
     X = tf.placeholder('float', [None, 32, 32, 3], name='input')
     Y = tf.placeholder('float', [None, 10], name='output')
 
-    w = init_weights([3, 3, 3, 32], '1')       # 3x3x1 conv, 32 outputs
-    w2 = init_weights([3, 3, 32, 64], '2')       # 3x3x1 conv, 32 outputs
-#    w3 = init_weights([5, 5, 64, 64])       # 3x3x1 conv, 32 outputs
-    w_fc = init_weights([64 * 8 * 8, 384], 'fc') # FC 32 * 14 * 14 inputs, 625 outputs
-    w_o = init_weights([384, 10], 'output')         # FC 625 inputs, 10 outputs (labels)
+    w = init_weights([3, 3, 3, 32], '1')
+    w2 = init_weights([3, 3, 32, 64], '2')
+    w_fc = init_weights([64 * 8 * 8, 384], 'fc')
+    w_o = init_weights([384, 10], 'output')
 
     p_keep_conv = tf.placeholder('float', name='keep_chance')
     p_keep_hidden = tf.placeholder('float', name='keep_chance')
@@ -100,34 +99,41 @@ with tf.name_scope('cnn') as scope:
     with tf.Session() as sess:
 
         saver = tf.train.Saver()
-        #if os.path.exists('mlp/session.ckpt'):
-        #    saver.restore(sess, 'mlp/session.ckpt')
+        if (sys.argv[1] == 'restore' or sys.argv[1] == 'patches' or sys.argv[1] == 'continue') and os.path.exists('mlp/checkpoint'):
+            saver.restore(sess, 'mlp/session.ckpt')
+        else:
+            tf.global_variables_initializer().run()
 
-        writer = tf.summary.FileWriter('./graphs', sess.graph)
-        tf.global_variables_initializer().run()
-        reshaped_x,reshaped_y = [],[]
-        accuracies = []
-        for i in range(15):
-            for b in range(1,total_batches+1):
-                reshaped_x, reshaped_y = getData(b)
-                training_batch = zip(range(0, len(reshaped_x), batch_size), range(batch_size, len(reshaped_x)+1, batch_size))
-                for start, end in training_batch:
-                    sess.run(train_op, feed_dict={X: reshaped_x[start:end], Y: reshaped_y[start:end], p_keep_conv: 0.8, p_keep_hidden: 0.8})
-
+        if sys.argv[1] == 'patches':
             test_indices = np.arange(len(te_x)) # Get A Test Batch
             np.random.shuffle(test_indices)
             test_indices = test_indices[0:test_size]
-            accuracy = np.mean(np.argmax(te_y[test_indices], axis=1) == sess.run(predict_op,
-                feed_dict={
-                    X: te_x[test_indices],
-                    p_keep_conv: 1.0,
-                    p_keep_hidden: 1.0
-                })
-            )
-            print(i, accuracy)
-            accuracies.append(accuracy)
-            saver.save(sess, 'mlp/session.ckpt')
-        plt.figure()
-        plt.plot(range(1,16), accuracies)
-        plt.title("accuracy on epochs")
-        plt.show()
+        else:
+            writer = tf.summary.FileWriter('./graphs', sess.graph)
+            reshaped_x,reshaped_y = [],[]
+            accuracies = []
+            for i in range(15):
+                for b in range(1,total_batches+1):
+                    reshaped_x, reshaped_y = getData(b)
+                    training_batch = zip(range(0, len(reshaped_x), batch_size), range(batch_size, len(reshaped_x)+1, batch_size))
+                    for start, end in training_batch:
+                        sess.run(train_op, feed_dict={X: reshaped_x[start:end], Y: reshaped_y[start:end], p_keep_conv: 0.8, p_keep_hidden: 0.8})
+
+                test_indices = np.arange(len(te_x)) # Get A Test Batch
+                np.random.shuffle(test_indices)
+                test_indices = test_indices[0:test_size]
+                accuracy = np.mean(np.argmax(te_y[test_indices], axis=1) == sess.run(predict_op,
+                    feed_dict={
+                        X: te_x[test_indices],
+                        p_keep_conv: 1.0,
+                        p_keep_hidden: 1.0
+                    })
+                )
+                print(i, accuracy)
+                accuracies.append(accuracy)
+                if sys.argv[1] == 'save' or sys.argv[1] == 'continue':
+                    saver.save(sess, 'mlp/session.ckpt')
+            plt.figure()
+            plt.plot(range(1,16), accuracies)
+            plt.title("accuracy on epochs")
+            plt.show()
