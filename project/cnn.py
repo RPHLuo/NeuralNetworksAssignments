@@ -1,6 +1,6 @@
 import tensorflow as tf
 import numpy as np
-import pandas as pd
+import processData
 
 batch_size = 128
 test_size = 256
@@ -25,16 +25,8 @@ def model(X, w, w_fc, w_o, p_keep_conv, p_keep_hidden):
     pyx = tf.matmul(l4, w_o)
     return pyx
 
-
-tr_data = pd.read_csv('all/train.csv',sep=',', encoding='latin-1')
-te_data = pd.read_csv('all/test.csv',sep=',', encoding='latin-1')
-tr_data = np.array(tr_data)
-te_data = np.array(te_data)
-trX = tr_data[:1]
-trY = tr_data[:2]
-teX = te_data[:1]
-teY = te_data[:2]
-
+dict = getVectorDictionary(25)
+trX, trY, teX, teY = getData()
 #trX = trX.reshape(-1, 28, 28, 1)  # 28x28x1 input img
 #teX = teX.reshape(-1, 28, 28, 1)  # 28x28x1 input img
 
