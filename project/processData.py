@@ -6,9 +6,14 @@ def getVectorDictionary(dim):
     word_vector = pd.read_csv('glove/glove.twitter.27B.{}d.txt'.format(dim),sep=' ', encoding='latin-1')
     word_vector = np.array(word_vector)
     vector_dictionary = {}
+    vocab = []
+    emb = []
     for i in range(0,len(word_vector)):
+        vocab.append(vector_dictionary[i][0])
+        emb.append(vector_dictionary[i][1:])
         vector_dictionary[word_vector[i][0]] = word_vector[i][1:dim+1]
     return vector_dictionary
+    print(vocab)
     #http://nlp.stanford.edu/data/glove.twitter.27B.zip
 
 def getData():
@@ -20,7 +25,7 @@ def getData():
     trY = tr_data[:2]
     teX = te_data[:1]
     teY = te_data[:2]
-    trX = np.array([np.array([processWord(word) for word in tweet.split(' ')]] for tweet in trX)
+    trX = np.array([np.array([processWord(word) for word in tweet.split(' ')] for tweet in trX)])
     return trX, trY, teX, teY
 
 def processWord(word):
@@ -33,24 +38,34 @@ def processWord(word):
 
 
     # Replace ST "entitites" with a unique token
-    text = re.sub(REGEX_USER, '<user>', word)
-    text = re.sub(REGEX_NUMBER, '<number>', word)
-    text = re.sub(REGEX_LINK, '<link>', word)
-    <hashtag>
-    <url>
-    <allcaps>
-    <elong>
-    <smile>
-    <neutralface>
-    text = re.sub(REGEX_USER, '<repeat>', word)
+    word = re.sub(REGEX_USER, '<user>', word)
+    word = re.sub(REGEX_NUMBER, '<number>', word)
+    word = re.sub(REGEX_LINK, '<link>', word)
+#    <hashtag>
+#    <url>
+#    <allcaps>
+#    <elong>
+#    <smile>
+#    <neutralface>
+    word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", word)
+#    string = re.sub(r"\'s", " \'s", string)
+#    string = re.sub(r"\'ve", " \'ve", string)
+#    string = re.sub(r"n\'t", " n\'t", string)
+#    string = re.sub(r"\'re", " \'re", string)
+#    string = re.sub(r"\'d", " \'d", string)
+#    string = re.sub(r"\'ll", " \'ll", string)
+
+    word = re.sub(REGEX_USER, '<repeat>', word)
     # Remove extraneous text data
-    text = re.sub(REGEX_HTML_ENTITY, "", word)
-    text = re.sub(REGEX_NON_ACSII, "", word)
-    text = re.sub(REGEX_PUNCTUATION, "", word)
+    word = re.sub(REGEX_HTML_ENTITY, "", word)
+    word = re.sub(REGEX_NON_ACSII, "", word)
+    word = re.sub(REGEX_PUNCTUATION, "", word)
     # Tokenize and remove < and > that are not in special tokens
-    words = " ".join(token.replace("<", "").replace(">", "")
-                     if token not in ['<TICKER>', '<USER>', '<LINK>', '<PRICE>', '<NUMBER>']
-                     else token
-                     for token
-                     in text.split())
-    return
+    #words = " ".join(token.replace("<", "").replace(">", "")
+    #                 if token not in ['<TICKER>', '<USER>', '<LINK>', '<PRICE>', '<NUMBER>']
+    #                 else token
+    #                 for token
+    #                 in text.split())
+    return 1
+
+getVectorDictionary(50)
