@@ -8,64 +8,64 @@ def getVectorDictionary(dim):
     vector_dictionary = {}
     vocab = []
     emb = []
+    tags = []
+    isascii = lambda s: len(s) == len(s.encode())
     for i in range(0,len(word_vector)):
-        vocab.append(vector_dictionary[i][0])
-        emb.append(vector_dictionary[i][1:])
-        vector_dictionary[word_vector[i][0]] = word_vector[i][1:dim+1]
-    return vector_dictionary
-    print(vocab)
+        if word_vector[i][0][0] == '<':
+            tags.append(word_vector[i][0])
+        if isascii(word_vector[i][0]):
+            vocab.append(word_vector[i][0])
+            emb.append(word_vector[i][1:])
+            vector_dictionary[word_vector[i][0]] = word_vector[i][1:dim+1]
+    return vector_dictionary, vocab, emb
     #http://nlp.stanford.edu/data/glove.twitter.27B.zip
 
 def getData():
     tr_data = pd.read_csv('all/train.csv',sep=',', encoding='latin-1')
-    te_data = pd.read_csv('all/test.csv',sep=',', encoding='latin-1')
+    #te_data = pd.read_csv('all/test.csv',sep=',', encoding='latin-1')
     tr_data = np.array(tr_data)
-    te_data = np.array(te_data)
-    trX = tr_data[:1]
-    trY = tr_data[:2]
-    teX = te_data[:1]
-    teY = te_data[:2]
-    trX = np.array([np.array([processWord(word) for word in tweet.split(' ')] for tweet in trX)])
-    return trX, trY, teX, teY
+    trX = tr_data[:,2]
+    trY = tr_data[:,1]
+    trX = np.array([processTweet(tweet) for tweet in trX])
+    return trX, trY, #teX, #teY
 
-def processWord(word):
-    word = word.lower()
+def processTweet(tweet):
     REGEX_USER = re.compile('\@\w+')
-    REGEX_LINK = re.compile('https?:\/\/[^\s]+')
+    REGEX_HASHTAG = re.compile('#')
+    REGEX_URL = re.compile('https?:\/\/[^\s]+')
     REGEX_HTML_ENTITY = re.compile('\&\w+')
     REGEX_NON_ACSII = re.compile('[^\x00-\x7f]')
-    REGEX_NUMBER = re.compile(r'[-+]?[0-9]+')
-
+    REGEX_NUMBER = re.compile('[-+]?[0-9]+')
+    REGEX_TIME = re.compile('%H:%M')
+    REGEX_RETWEET = re.compile('(?<!RT\s)@\S+')
+    REGEX_NEUTRALFACE = re.compile(':-\||=p|:-p')
+    REGEX_SMILE = re.compile('@-\)|\(:|:\)|:-D|:D|xD|x\)|;\]')
+    REGEX_SIGH = re.compile(':-/')
+    REGEX_HEART = re.compile('xox')
+    REGEX_SADFACE = re.compile("T_T|:'\(|=\(|:\(\)|:\[")
 
     # Replace ST "entitites" with a unique token
-    word = re.sub(REGEX_USER, '<user>', word)
-    word = re.sub(REGEX_NUMBER, '<number>', word)
-    word = re.sub(REGEX_LINK, '<link>', word)
-#    <hashtag>
-#    <url>
-#    <allcaps>
-#    <elong>
-#    <smile>
-#    <neutralface>
-    word = re.sub(r"[^A-Za-z0-9(),!?\'\`]", " ", word)
-#    string = re.sub(r"\'s", " \'s", string)
-#    string = re.sub(r"\'ve", " \'ve", string)
-#    string = re.sub(r"n\'t", " n\'t", string)
-#    string = re.sub(r"\'re", " \'re", string)
-#    string = re.sub(r"\'d", " \'d", string)
-#    string = re.sub(r"\'ll", " \'ll", string)
+    tweet = re.sub(REGEX_USER, '<user>', tweet)
+    tweet = re.sub(REGEX_NUMBER, '<number>', tweet)
+    tweet = re.sub(REGEX_URL, '<url>', tweet)
+    tweet = re.sub(REGEX_NON_ACSII, "", tweet)
+    tweet = re.sub(REGEX_HASHTAG, "<hashtag> ", tweet)
+    tweet = re.sub(REGEX_TIME, "<time>", tweet)
+    tweet = re.sub(REGEX_RETWEET, "<retweet>", tweet)
+    tweet = re.sub(REGEX_SADFACE, "<sadface>", tweet)
+    tweet = re.sub(REGEX_NEUTRALFACE, "<neutralface>", tweet)
+    tweet = re.sub(REGEX_SMILE, "<smile>", tweet)
+    tweet = re.sub(REGEX_SIGH, "<sigh>", tweet)
+    tweet = re.sub(REGEX_HEART, "<heart>", tweet)
+    tweet = re.sub(r"\'s", " is", tweet)
+    tweet = re.sub(r"\'ve", " have", tweet)
+    tweet = re.sub(r"n\'t", " not", tweet)
+    tweet = re.sub(r"\'re", " are", tweet)
+    tweet = re.sub(r"\'d", " had", tweet)
+    tweet = re.sub(r"\'ll", " will", tweet)
 
-    word = re.sub(REGEX_USER, '<repeat>', word)
     # Remove extraneous text data
-    word = re.sub(REGEX_HTML_ENTITY, "", word)
-    word = re.sub(REGEX_NON_ACSII, "", word)
-    word = re.sub(REGEX_PUNCTUATION, "", word)
-    # Tokenize and remove < and > that are not in special tokens
-    #words = " ".join(token.replace("<", "").replace(">", "")
-    #                 if token not in ['<TICKER>', '<USER>', '<LINK>', '<PRICE>', '<NUMBER>']
-    #                 else token
-    #                 for token
-    #                 in text.split())
-    return 1
-
-getVectorDictionary(50)
+    tweet = re.sub(REGEX_HTML_ENTITY, "<unknown>", tweet)
+    tweet = re.sub(REGEX_NON_ACSII, "<unknown>", tweet)
+    tweet = tweet.strip()
+    return tweet
