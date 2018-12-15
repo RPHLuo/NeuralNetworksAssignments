@@ -1,3 +1,8 @@
+*.h5
+training.1600000.processed.noemoticon.csv
+__pycache__/
+graphs/
+glove*
 .DS_Store
 
 a3/question4/q4\.py
