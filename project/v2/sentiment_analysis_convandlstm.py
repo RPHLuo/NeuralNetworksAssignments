@@ -10,8 +10,9 @@ from keras.utils import to_categorical
 MAX_NB_WORDS=200000
 MAX_SEQUENCE_LENGTH=50
 VALIDATION_SPLIT = .2
-
-with open("./refined_fb_data.csv", encoding = "ISO-8859-1" ) as f:
+#refined_uber_data.csv
+#training.1600000.processed.noemoticon.csv
+with open("./refined_uber_data.csv", encoding = "ISO-8859-1" ) as f:
     li=f.readlines()
 
 texts = []  # list of text samples
@@ -22,6 +23,20 @@ for row in li:
     row = row.replace('"',"").strip().split(",")
     texts.append(row[-1])
     labels.append(row[0])
+'''
+
+for row in li:
+    row = row.replace('"',"").strip().split(",")
+    texts.append(row[-1])
+    if int(row[0])==4:
+        label = 1
+    elif int(row[0]) == 2:
+        label = 1
+    else:
+        label =0
+    labels.append(label)
+
+'''
 
 print('Found %s texts.' % len(texts))
 
@@ -100,6 +115,7 @@ model.add(Dense(2,activation="softmax"))
 model.summary()
 
 """### Load weights"""
+model.load_weights('model_tweets_new.h5')
 
 model.compile(loss='categorical_crossentropy',
               optimizer='adam',
@@ -117,5 +133,4 @@ print("Accuracy: "+str(score[1]))
 model_json = model.to_json()
 with open("model_tweets_new.json", "w") as json_file:
     json_file.write(model_json)
-
-model.save_weights("model_tweets_new.h5")
+#model.save_weights("model_tweets_new.h5")
